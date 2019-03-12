@@ -31,7 +31,7 @@ namespace SalesWebMvc.Controllers
         public async Task<IActionResult> Create()
         {
             var departments = await _departmentService.FindAllAsync();
-            var viewModel = new SellerFormViewModel { Departments = departments};
+            var viewModel = new SellerFormViewModel { Departments = departments };
             return View(viewModel);
         }
 
@@ -69,8 +69,15 @@ namespace SalesWebMvc.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            await _sellerService.RemoveAsync(id);
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                await _sellerService.RemoveAsync(id);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (IntegrityException e)
+            {
+                return RedirectToAction(nameof(Error), new { message = e.Message });
+            }
         }
 
         public async Task<IActionResult> Details(int? id)
@@ -121,10 +128,11 @@ namespace SalesWebMvc.Controllers
             {
                 return RedirectToAction(nameof(Error), new { message = "Id mismatch" });
             }
-            try { 
-            await _sellerService.UpdateAsync(seller);
-            return RedirectToAction(nameof(Index));
-        }
+            try
+            {
+                await _sellerService.UpdateAsync(seller);
+                return RedirectToAction(nameof(Index));
+            }
             catch (NotFoundException e)
             {
                 return RedirectToAction(nameof(Error), new { message = e.Message });
